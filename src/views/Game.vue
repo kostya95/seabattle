@@ -13,7 +13,7 @@
         <div class="player">
             <h2>Компьютер</h2>
             <div class="ships">
-                <ship v-for="i in pcShips" :count="i.count" :size="i.size" :key="i"></ship>
+                <ship v-for="i in pcShips" :count="i.count" :size="i.size" :key="`${i.count}i${i.size}`"></ship>
             </div>
             <field :close="'close'" :field="pcField" @opencell="move"></field>
         </div>
@@ -21,7 +21,7 @@
         <div class="player">
             <h2>Вы</h2>
             <div class="ships">
-                <ship v-for="i in userShips" :count="i.count" :size="i.size" :key="i"></ship>
+                <ship v-for="i in userShips" :count="i.count" :size="i.size" :key="`${i.count}i${i.size}`"></ship>
             </div>
             <field :close="'open'" :field="userField"></field>
         </div>
@@ -34,14 +34,16 @@ import Field from './Field'
 import SeaBattleGame from '../libs/seabattlegame'
 import Player from '../libs/player'
 import {mapGetters, mapMutations} from 'vuex';
+
 let game = new SeaBattleGame();
-let player = new Player(game)
+let player = new Player(game);
+
 export default ({
     components: {Ship,Field},
     data: function () {
         return {
-            userShips: game.userField,
-            pcShips: game.pcField,
+            userShips: [],
+            pcShips: [],
             pcField: '',
             userField: '',
             curr_move: 1,
@@ -50,20 +52,23 @@ export default ({
         }
     },
     computed: {
+        // отображение информации
         ...mapGetters(['myName', 'showUserScore', 'showPcScore'])
     },
     beforeMount: function () {
         this.start();
     },
     mounted: function () {
-
+        
         if (this.curr_move==0) {
             this.pcMove();
         }
     },
     methods: {
+        // создание игры и игрока
         start: function () {
             game.start();
+            player.create();
             this.userField = game.userField;
             this.pcField = game.pcField;
             this.curr_move = game.is_move;
@@ -73,6 +78,7 @@ export default ({
             this.pcShips = [];
             this.createShips();
         },
+        // создание статистики по кораблям
         createShips: function () {
             for(let i=4; i>0; i--) {
                 this.userShips.push({
@@ -85,41 +91,40 @@ export default ({
                 })
             }
         },
+        // ход компьютера 
         pcMove: function () {
             setTimeout(()=>{
-                let stat = player.move()
-                this.stat = stat;
+                this.stat = player.move()
                 this.updateField();
-                console.log(stat.status)
-                if (stat.game == 'gameover') {
+                if (this.stat.game == 'gameover') {
                     this.game = 'stop'
                     return
                 }
-                if (stat.status!='fail' && this.game == 'starting') {
+                if (this.stat.status!='fail' && this.game == 'starting') {
                     this.pcMove();
-                    if (stat.status == 'kill') {
-                        this.userShips.find(el => stat.size==el.size).count--
+                    if (this.stat.status == 'kill') {
+                        this.userShips.find(el => this.stat.size==el.size).count--
                     }
                 } else {
                     this.curr_move = Math.abs(this.curr_move - 1)
                 }
-            },0)
+            },1000)
         },
+        // ход игрока
         move: function (ob) {
             if (this.curr_move == 1) {
-                let stat = game.move(ob.x,ob.y);
-                this.stat = stat
+                this.stat = game.move(ob.x,ob.y);
+                
                 this.updateField()
-                console.log(stat.status)
-                if (stat.game=='gameover') {
+                if (this.stat.game=='gameover') {
                     this.game='stop'
                     return
                 }
-                if (stat.status == 'fail') {
+                if (this.stat.status == 'fail') {
                     this.curr_move = Math.abs(this.curr_move - 1)
                 }
-                if (stat.status == 'kill') {
-                    this.pcShips.find(el => stat.size==el.size).count--
+                if (this.stat.status == 'kill') {
+                    this.pcShips.find(el => this.stat.size==el.size).count--
                 }
                 if (this.curr_move == 0) {
                     this.pcMove()
@@ -127,6 +132,7 @@ export default ({
             }
 
         },
+        // обновляем игровые поля
         updateField: function () {
             this.pcField = game.pcField
             this.userField= game.userField
@@ -135,9 +141,11 @@ export default ({
             game.start();
             this.updateField()
         },
+        // обновление счета
         ...mapMutations(['refresh','incrementScore'])
     },
     watch: {
+        // проверяет конец игры
         game: function () {
             if (this.game == 'stop') {
                 (this.stat.result == 'win') ? this.incrementScore('user'): this.incrementScore('pc');

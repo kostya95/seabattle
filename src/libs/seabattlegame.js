@@ -1,5 +1,5 @@
 export default class SeaBattleGame {
-    letters = ['А','Б','В','Г','Д','Е','Ж','З','И','К']
+    //создаем игру
     start() {
         this.pcShips = this.createShips('close');
         this.pcField = this.field;
@@ -9,10 +9,15 @@ export default class SeaBattleGame {
         this.pc_score = 20;
         this.user_score = 20;
     }
+    // создаем корабль
     createShips(stat) {
         this.cells = {};
         let ships = [];
         this.field = [];
+        // создаем игровое поле
+        // каждая ячейка содержит информацию о родительских ячейках, координатах и количестве
+        // доступных ячеек
+
         for (let i = 0; i<10; i++) {
             let tfield = []
             for (let j = 0; j<10; j++) {
@@ -33,30 +38,25 @@ export default class SeaBattleGame {
             }
             this.field.push(tfield)
         }
+        // создаем корабли и расставляем их на поле
         for (let i = 4; i>0; i--) {
             for(let j = 5 - i; j>0; j--) {
                 let des = Math.round(Math.random());
                 let allowedCell = []
                 this.toDel = []
-                    if (des == 1) {
-
-                        for(let cell in this.cells) {
-
-                            if (this.cells[cell].tchildren >= i) {
-                                allowedCell.push(this.cells[cell])
-                            }
-
-                        }
-                    } else {
-                        for(let cell in this.cells) {
-
-                            if (this.cells[cell].lchildren >= i) {
-                                allowedCell.push(this.cells[cell])
-                            }
+                if (des == 1) {
+                    for(let cell in this.cells) {
+                        if (this.cells[cell].tchildren >= i) {
+                            allowedCell.push(this.cells[cell])
                         }
                     }
-
-
+                } else {
+                    for(let cell in this.cells) {
+                        if (this.cells[cell].lchildren >= i) {
+                            allowedCell.push(this.cells[cell])
+                        }
+                    }
+                }
                 let start = allowedCell[Math.floor(Math.random()*allowedCell.length)]
                 let tship = [];
 
@@ -67,6 +67,7 @@ export default class SeaBattleGame {
                 ships.push(tship);
                 tship.forEach(ship => {
                     this.field[ship.l][ship.t].isShip=1
+                    // удаляем ненужные ячейки и обновляем информацию в родительских ячейках
                     this.clearCells(ship)
                     this.clearCells(this.cells[ship.id + 10])
                     this.clearCells(this.cells[ship.id + 1])
@@ -78,6 +79,7 @@ export default class SeaBattleGame {
         }
         return ships
     }
+    //удаляет ненужные ячейки и обновляет информацию в родительских ячейках
     clearCells(cell) {
 
         if (cell == undefined) {
@@ -99,13 +101,17 @@ export default class SeaBattleGame {
         }
         delete this.cells[cell.id]
     }
+    //скрипт игры
     move(x,y) {
         let field = (this.is_move)? this.pcField:this.userField;
+        // если выбирается ячейка, которую уже выбирали,
+        // возвращаем статус о повторном ходе
         if (['fail','hurt','kill'].includes(field[x][y].status)){
             return {
                 status: 'one_more'
             }
         }
+        // если в ячейке нет корабля, возвращаем статус "мимо"
         if ( field[x][y].isShip == 0 ) {
             this.is_move = Math.abs(this.is_move - 1);
             field[x][y].status = 'fail'
@@ -113,6 +119,8 @@ export default class SeaBattleGame {
                 status: 'fail'
             }
         }
+        // уменьшаем счетчик занятых ячеек
+        // если счетчик равен нулю возвращаем "конец игры"
         if (this.is_move) {
             this.pc_score--;
             if (this.pc_score==0) {
@@ -135,6 +143,7 @@ export default class SeaBattleGame {
         let ships = (this.is_move)? this.pcShips:this.userShips;
         let shipcell = null;
         let ship = null;
+        // "раним" корабль
         for(let i = 0; i<ships.length; i++) {
             shipcell = ships[i].find(el=>{
                 return el.id == x*10 + y
@@ -148,6 +157,8 @@ export default class SeaBattleGame {
         let brocken = ship.reduce((sum,current)=>{
             return (current.is_intact)? sum+1: sum
         },0);
+        // если количество "раненых" ячеек равно длине корабля
+        // возвращаем "убит", в противном случае  "ранен"
         if (brocken == ship.length) {
             ship.forEach(s=>{
                 field[s.l][s.t].status = 'kill'
