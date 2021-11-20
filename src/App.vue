@@ -1,53 +1,20 @@
 <template>
   <div id="app">
-    <header  v-if="is_starting">
-
-        <p class="username">{{username}}</p>
-        <p class="score">{{username}} 0:0 Компьютер</p>
-        <button class="refresh"><img src="./assets/refresh.svg" alt=""></button>
-
-    </header>
-    <main>
-      <div class="starting" v-if="!is_starting">
-        <div class="welcome" v-if="username">
-          <h1>Привет, {{username}}</h1>
-          <button class="start" @click="start">Игра</button>
-        </div>
-        <div class="welcome" v-else>
-          <h1>Давай познакомимся</h1>
-          <input type="text" v-model="inname" placeholder="Введи своё имя">
-          <button class="start" @click="rememberMe" v-bind:disabled="inname.trim().length == 0">Запомнить меня</button>
-        </div>
-      </div>
-      <router-view></router-view>
-    </main>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-
+import {mapActions} from 'vuex';
 export default  {
   name: 'App',
-  data: function () {
-    return {
-      inname: '',
-      username: '',
-      is_starting: false
-    }
 
-  },
   mounted: function ()  {
-    this.username = localStorage.getItem('username')? localStorage.getItem('username'):'';
+    this.getName();
+    this.getScore();
   },
   methods: {
-    rememberMe: function() {
-      localStorage.setItem('username', this.inname);
-      this.username = this.inname
-    },
-    start: function () {
-      this.is_starting =true;
-      this.$router.push('/game')
-    }
+    ...mapActions(['getName','getScore']),
   }
 
 }

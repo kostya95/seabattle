@@ -117,7 +117,8 @@ export default class SeaBattleGame {
             this.pc_score--;
             if (this.pc_score==0) {
                 return {
-                    status: 'gameover',
+                    status: 'kill',
+                    game: 'gameover',
                     result: 'win'
                 }
             }
@@ -125,8 +126,9 @@ export default class SeaBattleGame {
             this.user_score--;
             if (this.user_score==0) {
                 return {
-                    status: 'gameover',
-                    result: 'win'
+                    status: 'kill',
+                    game: 'gameover',
+                    result: 'fail'
                 }
             }
         }

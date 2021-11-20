@@ -1,7 +1,7 @@
 <template>
-    <div class="ship">
+    <div class="ship" :class="count==0?'is_end':''">
         <div class="ship_img">
-            <div class="ship_cell" v-for="item in (5-count)" :key="item"></div>
+            <div class="ship_cell" v-for="item in size" :key="item"></div>
 
         </div>
         <p class="ship_count">{{count}}</p>
@@ -11,7 +11,7 @@
 
 
 export default ({
-    props: ['count']
+    props: ['count', 'size']
 })
 </script>
 <style>
@@ -20,6 +20,28 @@ export default ({
         align-items: center;
         flex-direction: column;
         margin-right: 15px;
+        position: relative;
+    }
+    .ship:after, .ship:before {
+        content: ' ';
+        position: absolute;
+        width: 60px;
+        height: 4px;
+        background: #bd2f04;
+        top: 20%;
+        left: 50%;
+        opacity: 0;
+        transition: opacity .3s;
+    }
+    .ship::after {
+        transform:translateX(-50%) rotate(45deg) ;
+
+    }
+    .ship:before {
+        transform:translateX(-50%) rotate(-45deg) ;
+    }
+    .ship.is_end:after, .ship.is_end:before {
+        opacity: 1;
     }
     .ship_img {
         display: flex;
